@@ -15,7 +15,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import make_classification
 import plotly.graph_objects as go
 import plotly.io as pio
-
+# 设置中文字体支持
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']  # 设置中文字体
+matplotlib.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 # 设置页面配置
 st.set_page_config(page_title="儿童皮肤损伤识别系统", page_icon="👶🔥", layout="wide", initial_sidebar_state="expanded")
 
