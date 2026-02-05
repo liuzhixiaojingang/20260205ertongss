@@ -38,24 +38,48 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     try:
-            import gdown
-            # 从Google Drive下载模型
-            model_url = "https://github.com/liuzhixiaojingang/20260205ertongss/raw/main/rf.pkl"
-            model_path = "rf_model.pkl"
-            
-            if not os.path.exists(model_path):
-                with st.spinner("正在从云端下载模型..."):
-                    gdown.download(model_url, model_path, quiet=False)
-            
-            model = joblib.load(model_path)
-            # 设置特征名称
-            model.feature_names_in_ = ['BG1', 'Ascorbic acid', 'Pregnenolone sulfate', 'IL-1β', '5-Methoxytryptamine', 'EGF', 'BG2']
-            st.success("✅ 本地模型加载成功")
-            return model
+        # 首先检查本地是否有模型文件
+        model_paths = [
+            "rf.pkl",  # 与主文件同目录
+            "model/rf.pkl",  # model目录下
+            "rf_model.pkl",  # 之前可能下载的文件
+        ]
+        
+        for model_path in model_paths:
+            if os.path.exists(model_path):
+                model = joblib.load(model_path)
+                if not hasattr(model, 'feature_names_in_'):
+                    model.feature_names_in_ = ['BG1', 'Ascorbic acid', 'Pregnenolone sulfate', 
+                                              'IL-1β', '5-Methoxytryptamine', 'EGF', 'BG2']
+                st.success(f"✅ 模型加载成功: {model_path}")
+                return model
+        
+        # 如果本地没有，尝试从GitHub下载
+        st.info("未找到本地模型，将尝试从GitHub下载...")
+        
+        # 使用requests下载
+        import requests
+        model_url = "https://github.com/liuzhixiaojingang/20260205ertongss/raw/main/rf.pkl"
+        model_path = "rf_model.pkl"
+        with st.spinner("正在从GitHub下载模型..."):
+            response = requests.get(model_url)
+            if response.status_code == 200:
+                with open(model_path, 'wb') as f:
+                    f.write(response.content)
+                
+                model = joblib.load(model_path)
+                if not hasattr(model, 'feature_names_in_'):
+                    model.feature_names_in_ = ['BG1', 'Ascorbic acid', 'Pregnenolone sulfate', 
+                                              'IL-1β', '5-Methoxytryptamine', 'EGF', 'BG2']
+                st.success("✅ 云端模型加载成功")
+                return model
+            else:
+                raise Exception(f"下载失败: {response.status_code}")
+    
     except Exception as e:
         st.error(f"❌ 模型加载失败: {str(e)}")
-        return None
-
+        st.warning("⚠️ 使用演示模型进行展示")
+        return create_demo_model()
 # 获取图表字体设置函数
 def get_chart_font_settings():
     """获取图表字体设置"""
